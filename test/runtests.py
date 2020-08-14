@@ -24,8 +24,8 @@ from plumbum import FG, BG
 from plumbum.cmd import curl
 
 python     = plumbum.local["env/bin/python"]
-serve_once = plumbum.local["nc.openbsd"]["-C", "-l", "-p"]
-pac4cli    = python["main.py"]
+serve_once = python["test/serve_once.py"]
+pac4cli    = python["-m", "pac4cli", "--loglevel", "DEBUG"]
 
 testdir = plumbum.local.path(os.path.dirname(os.path.abspath(__file__)))
 
@@ -152,6 +152,21 @@ class TestProxyConfigurations(dbusmock.DBusTestCase):
             fake_proxy_2.proc.kill()
             fake_proxy_1.proc.kill()
             static_server.proc.kill()
+
+    def test_get_dns_wpad_urls_hostname_only(self):
+        from pac4cli.wpad import WPAD
+        wpad = WPAD(None, None)
+        dns_urls = wpad.get_dns_wpad_urls(["example.com"])
+        self.assertEqual(len(dns_urls), 1)
+        self.assertEqual(dns_urls[0], "http://wpad.example.com/wpad.dat")
+
+    def test_get_dns_wpad_urls_hostname_and_subdomain(self):
+        from pac4cli.wpad import WPAD
+        wpad = WPAD(None, None)
+        dns_urls = wpad.get_dns_wpad_urls(["subdomain.example.com"])
+        self.assertEqual(len(dns_urls), 2)
+        self.assertEqual(dns_urls[0], "http://wpad.subdomain.example.com/wpad.dat")
+        self.assertEqual(dns_urls[1], "http://wpad.example.com/wpad.dat")
 
 
 if __name__ == '__main__':

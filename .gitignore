@@ -1,4 +1,8 @@
 *.swp
+tags
 __pycache__
 env/
 pacparser/
+build/
+dist/
+pac4cli.egg-info/
